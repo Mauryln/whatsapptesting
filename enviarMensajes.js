@@ -136,9 +136,12 @@ function convertirFormatoWhatsApp(html) {
       const tagName = nodo.tagName.toLowerCase();
       let contenido = '';
 
-      // Procesar los nodos hijos
+      // Crear un nuevo contexto para los nodos hijos
+      const nuevoContexto = { ...contexto };
+
+      // Procesar los nodos hijos con el nuevo contexto
       for (const child of nodo.childNodes) {
-        contenido += procesarNodo(child, contexto);
+        contenido += procesarNodo(child, nuevoContexto);
       }
 
       // Eliminar saltos de línea al inicio y final del contenido para los formatos
@@ -147,13 +150,43 @@ function convertirFormatoWhatsApp(html) {
       switch (tagName) {
         case 'strong':
         case 'b':
-          return `*${clean(contenido)}*`;
+          // Dividir por saltos de línea y aplicar negrita a cada línea
+          return contenido.split('\n').map(line => {
+            const trimmedLine = line.trim();
+            // Si ya hay estilos aplicados, mantenerlos
+            if (trimmedLine.startsWith('_') && trimmedLine.endsWith('_')) {
+              return `*${trimmedLine}*`;
+            } else if (trimmedLine.startsWith('~') && trimmedLine.endsWith('~')) {
+              return `*${trimmedLine}*`;
+            }
+            return trimmedLine ? `*${trimmedLine}*` : '';
+          }).join('\n');
         case 'em':
         case 'i':
-          return `_${clean(contenido)}_`;
+          // Dividir por saltos de línea y aplicar cursiva a cada línea
+          return contenido.split('\n').map(line => {
+            const trimmedLine = line.trim();
+            // Si ya hay estilos aplicados, mantenerlos
+            if (trimmedLine.startsWith('*') && trimmedLine.endsWith('*')) {
+              return `_${trimmedLine}_`;
+            } else if (trimmedLine.startsWith('~') && trimmedLine.endsWith('~')) {
+              return `_${trimmedLine}_`;
+            }
+            return trimmedLine ? `_${trimmedLine}_` : '';
+          }).join('\n');
         case 'del':
         case 's':
-          return `~${clean(contenido)}~`;
+          // Dividir por saltos de línea y aplicar tachado a cada línea
+          return contenido.split('\n').map(line => {
+            const trimmedLine = line.trim();
+            // Si ya hay estilos aplicados, mantenerlos
+            if (trimmedLine.startsWith('*') && trimmedLine.endsWith('*')) {
+              return `~${trimmedLine}~`;
+            } else if (trimmedLine.startsWith('_') && trimmedLine.endsWith('_')) {
+              return `~${trimmedLine}~`;
+            }
+            return trimmedLine ? `~${trimmedLine}~` : '';
+          }).join('\n');
         case 'code':
           if (contexto.pre) {
             return `\0\0\0${clean(contenido)}\0\0\0`;
@@ -161,12 +194,13 @@ function convertirFormatoWhatsApp(html) {
             return `\0${clean(contenido)}\0`;
           }
         case 'pre':
+          nuevoContexto.pre = true;
           return `\0\0\0${clean(contenido)}\0\0\0\n`;
         case 'ul':
           return contenido.replace(/^(.*)$/gm, (line) => line ? `* ${line}` : '').replace(/\* $/, '') + '\n';
         case 'ol':
           let i = 1;
-          return Array.from(nodo.children).map(li => `${i++}. ${procesarNodo(li, contexto).replace(/^\n+|\n+$/g, '')}`).join('\n') + '\n';
+          return Array.from(nodo.children).map(li => `${i++}. ${procesarNodo(li, nuevoContexto).replace(/^\n+|\n+$/g, '')}`).join('\n') + '\n';
         case 'li':
           return clean(contenido) + '\n';
         case 'blockquote':

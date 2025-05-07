@@ -16,13 +16,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await response.json();
         
         if (data.success && data.status === 'ready') {
-          loadLabels();
+          // Solo cargar las etiquetas si el selector está vacío o deshabilitado
+          if (labelDropdown.disabled || labelDropdown.options.length <= 1) {
+            loadLabels();
+          }
         } else {
+          // Solo resetear si la sesión no está lista
           labelDropdown.innerHTML = '<option value="">Conecta WhatsApp primero</option>';
+          labelDropdown.disabled = true;
         }
       } catch (error) {
         console.error("Error verificando estado de sesión:", error);
-        labelDropdown.innerHTML = '<option value="">Error al verificar estado</option>';
+        // Solo mostrar error si el selector está vacío o deshabilitado
+        if (labelDropdown.disabled || labelDropdown.options.length <= 1) {
+          labelDropdown.innerHTML = '<option value="">Error al verificar estado</option>';
+          labelDropdown.disabled = true;
+        }
       }
     }
   
@@ -54,11 +63,17 @@ document.addEventListener("DOMContentLoaded", () => {
             labelDropdown.value = currentSelection;
           }
         } else {
-          labelDropdown.innerHTML = '<option value="">Error al cargar etiquetas</option>';
+          // Solo mostrar error si el selector está vacío
+          if (labelDropdown.options.length <= 1) {
+            labelDropdown.innerHTML = '<option value="">Error al cargar etiquetas</option>';
+          }
         }
       } catch (error) {
         console.error("Error al cargar etiquetas:", error);
-        labelDropdown.innerHTML = '<option value="">Error al cargar etiquetas</option>';
+        // Solo mostrar error si el selector está vacío
+        if (labelDropdown.options.length <= 1) {
+          labelDropdown.innerHTML = '<option value="">Error al cargar etiquetas</option>';
+        }
       }
     }
   

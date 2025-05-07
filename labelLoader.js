@@ -12,15 +12,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
       
       if (data.success && data.status === 'ready') {
-        loadLabels();
+        if (labelSelector.disabled || labelSelector.options.length <= 1) {
+          loadLabels();
+        }
       } else {
         labelSelector.innerHTML = '<option value="">Conecta WhatsApp primero</option>';
         labelSelector.disabled = true;
       }
     } catch (error) {
       console.error("Error verificando estado de sesión:", error);
-      labelSelector.innerHTML = '<option value="">Error al verificar estado</option>';
-      labelSelector.disabled = true;
+      if (labelSelector.disabled || labelSelector.options.length <= 1) {
+        labelSelector.innerHTML = '<option value="">Error al verificar estado</option>';
+        labelSelector.disabled = true;
+      }
     }
   }
 
