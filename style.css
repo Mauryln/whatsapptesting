@@ -655,7 +655,7 @@ body {
 .textarea-container {
   position: relative;
   width: 100%;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 textarea {
@@ -1526,4 +1526,64 @@ textarea {
 .preview-actions button {
   padding: 8px 15px;
   font-size: 14px;
+}
+
+/* --- Trix Editor Custom Styles --- */
+trix-toolbar {
+  background: var(--dropdown-bg);
+  border-radius: 8px 8px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  margin-bottom: 0;
+  padding: 0.5rem 0.5rem 0 0.5rem;
+}
+
+trix-editor {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 0 0 8px 8px;
+  min-height: 150px;
+  padding: 1rem;
+  font-size: 1rem;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  box-shadow: none;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  resize: vertical;
+  word-break: break-word;
+}
+
+trix-editor:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.15);
+}
+
+/* Ocultar el botón de adjuntar archivos de Trix */
+trix-toolbar [data-trix-action="attachFiles"] {
+  display: none !important;
+}
+
+/* Ajustar la barra de herramientas para que no deje espacio extra donde estaba el botón */
+trix-toolbar .trix-button-group--file-tools {
+  display: none !important;
+}
+
+/* Ajustar el margen inferior del contenedor del editor para que no se vea descuadrado */
+.textarea-container {
+  margin-bottom: 1.5rem;
+}
+
+trix-editor ul,
+trix-editor ol {
+  padding-left: 2em;
+  margin: 0.5em 0 0.5em 0;
+}
+
+trix-editor li {
+  margin-left: 0;
+  padding-left: 0.2em;
+  word-break: break-word;
 }

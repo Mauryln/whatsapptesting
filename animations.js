@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const emojiBtn = document.getElementById("emoji-btn")
   const emojiPicker = document.getElementById("emoji-picker")
   const emojiContainer = document.querySelector(".emoji-container")
-  const messageTextarea = document.getElementById("mensaje-texto")
+  const trixEditor = document.querySelector('trix-editor')
 
   if (emojiBtn) {
     emojiBtn.addEventListener("click", () => {
@@ -348,28 +348,13 @@ document.addEventListener("DOMContentLoaded", () => {
       emojiElement.textContent = emoji
       emojiElement.addEventListener("click", () => {
         // Insert emoji at cursor position
-        if (messageTextarea) {
-          insertAtCursor(messageTextarea, emoji)
+        if (trixEditor) {
+          trixEditor.editor.insertString(emoji)
         }
         emojiPicker.classList.remove("active")
       })
       emojiContainer.appendChild(emojiElement)
     })
-  }
-
-  // Insert text at cursor position
-  function insertAtCursor(textarea, text) {
-    if (!textarea) return
-    const startPos = textarea.selectionStart
-    const endPos = textarea.selectionEnd
-    const scrollTop = textarea.scrollTop
-
-    textarea.value =
-      textarea.value.substring(0, startPos) + text + textarea.value.substring(endPos, textarea.value.length)
-    textarea.focus()
-    textarea.selectionStart = startPos + text.length
-    textarea.selectionEnd = startPos + text.length
-    textarea.scrollTop = scrollTop
   }
 
   // File attachment preview
@@ -780,4 +765,101 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Inicializar animaciones
   animateCheckboxItems()
+
+  // Botón de plantillas mejorado con edición, eliminación e inserción individual
+  const templateBtn = document.getElementById("template-btn")
+  if (templateBtn && trixEditor) {
+    function getPlantillas() {
+      const stored = localStorage.getItem("wa_plantillas")
+      if (stored) {
+        try {
+          return JSON.parse(stored)
+        } catch {
+          return [
+            "Hola, ¿cómo estás? 😊",
+            "¡Te escribo para informarte sobre nuestra promoción!",
+            "Estimado cliente, le recordamos que...",
+            "Gracias por tu preferencia."
+          ]
+        }
+      }
+      return [
+        "Hola, ¿cómo estás? 😊",
+        "¡Te escribo para informarte sobre nuestra promoción!",
+        "Estimado cliente, le recordamos que...",
+        "Gracias por tu preferencia."
+      ]
+    }
+    function setPlantillas(arr) {
+      localStorage.setItem("wa_plantillas", JSON.stringify(arr))
+    }
+
+    templateBtn.addEventListener("click", () => {
+      let plantillas = getPlantillas()
+      let menu = plantillas.map((p, i) => `${i + 1}. ${p}`).join("\n") +
+        "\n\nEscribe el número de la plantilla a insertar, 'editar {número}' para editar una, 'eliminar {número}' para borrar, 'insertar' para añadir una nueva, o 'editar' para modificar todas."
+      let seleccion = prompt(menu, "1")
+      if (!seleccion) return
+      seleccion = seleccion.trim()
+      // Eliminar plantilla
+      if (/^eliminar\s*\d+$/i.test(seleccion)) {
+        const num = parseInt(seleccion.match(/\d+/)[0])
+        if (!isNaN(num) && num >= 1 && num <= plantillas.length) {
+          if (confirm(`¿Seguro que deseas eliminar la plantilla ${num}?`)) {
+            plantillas.splice(num - 1, 1)
+            setPlantillas(plantillas)
+            alert("Plantilla eliminada!")
+          }
+        } else {
+          alert("Número inválido.")
+        }
+        return
+      }
+      // Editar una plantilla específica
+      if (/^editar\s*\d+$/i.test(seleccion)) {
+        const num = parseInt(seleccion.match(/\d+/)[0])
+        if (!isNaN(num) && num >= 1 && num <= plantillas.length) {
+          const nueva = prompt("Edita la plantilla:", plantillas[num - 1])
+          if (nueva !== null && nueva.trim() !== "") {
+            plantillas[num - 1] = nueva.trim()
+            setPlantillas(plantillas)
+            alert("Plantilla actualizada!")
+          }
+        } else {
+          alert("Número inválido.")
+        }
+        return
+      }
+      // Insertar nueva plantilla
+      if (seleccion.toLowerCase() === "insertar") {
+        const nueva = prompt("Escribe la nueva plantilla:")
+        if (nueva && nueva.trim() !== "") {
+          plantillas.push(nueva.trim())
+          setPlantillas(plantillas)
+          alert("Plantilla añadida!")
+        }
+        return
+      }
+      // Editar todas las plantillas
+      if (seleccion.toLowerCase() === "editar") {
+        let nuevas = prompt(
+          "Edita tus plantillas, una por línea:",
+          plantillas.join("\n")
+        )
+        if (nuevas !== null) {
+          plantillas = nuevas.split(/\r?\n/).map(p => p.trim()).filter(Boolean)
+          setPlantillas(plantillas)
+          alert("Plantillas actualizadas!")
+        }
+        return
+      }
+      // Selección por número
+      const num = parseInt(seleccion)
+      if (!isNaN(num) && num >= 1 && num <= plantillas.length) {
+        trixEditor.editor.insertString(plantillas[num - 1])
+      } else {
+        alert("Selección inválida.")
+      }
+    })
+  }
 })

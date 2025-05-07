@@ -1,6 +1,9 @@
 document.getElementById("enviar-btn").addEventListener("click", async () => {
   try {
-    const message = document.getElementById("mensaje-texto").value.trim()
+    // Obtener el contenido HTML del editor Trix
+    const trixEditor = document.querySelector('trix-editor');
+    const htmlContent = trixEditor.innerHTML;
+    const message = convertirFormatoWhatsApp(htmlContent);
     const delay = Number.parseInt(document.getElementById("delaySelect").value)
     const checkboxes = document.querySelectorAll('#numberList input[type="checkbox"]:checked')
     const mediaFileInput = document.getElementById("mediaFile")
@@ -109,11 +112,79 @@ document.getElementById("enviar-btn").addEventListener("click", async () => {
     }
     console.error("Error principal:", error)
   }
-  function generarMensajeConVariantes(mensaje) {
-    return mensaje.replace(/\{([^}]+)\}/g, (_, opciones) => {
-      const variantes = opciones.split('|').map(opt => opt.trim());
-      return variantes[Math.floor(Math.random() * variantes.length)];
-    });
-  }
-  
 })
+
+function generarMensajeConVariantes(mensaje) {
+  return mensaje.replace(/\{([^}]+)\}/g, (_, opciones) => {
+    const variantes = opciones.split('|').map(opt => opt.trim());
+    return variantes[Math.floor(Math.random() * variantes.length)];
+  });
+}
+
+function convertirFormatoWhatsApp(html) {
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+
+  function procesarNodo(nodo, contexto = {}) {
+    let resultado = '';
+
+    if (nodo.nodeType === Node.TEXT_NODE) {
+      return nodo.textContent;
+    }
+
+    if (nodo.nodeType === Node.ELEMENT_NODE) {
+      const tagName = nodo.tagName.toLowerCase();
+      let contenido = '';
+
+      // Procesar los nodos hijos
+      for (const child of nodo.childNodes) {
+        contenido += procesarNodo(child, contexto);
+      }
+
+      // Eliminar saltos de línea al inicio y final del contenido para los formatos
+      const clean = (txt) => txt.replace(/^\n+|\n+$/g, '');
+
+      switch (tagName) {
+        case 'strong':
+        case 'b':
+          return `*${clean(contenido)}*`;
+        case 'em':
+        case 'i':
+          return `_${clean(contenido)}_`;
+        case 'del':
+        case 's':
+          return `~${clean(contenido)}~`;
+        case 'code':
+          if (contexto.pre) {
+            return `\0\0\0${clean(contenido)}\0\0\0`;
+          } else {
+            return `\0${clean(contenido)}\0`;
+          }
+        case 'pre':
+          return `\0\0\0${clean(contenido)}\0\0\0\n`;
+        case 'ul':
+          return contenido.replace(/^(.*)$/gm, (line) => line ? `* ${line}` : '').replace(/\* $/, '') + '\n';
+        case 'ol':
+          let i = 1;
+          return Array.from(nodo.children).map(li => `${i++}. ${procesarNodo(li, contexto).replace(/^\n+|\n+$/g, '')}`).join('\n') + '\n';
+        case 'li':
+          return clean(contenido) + '\n';
+        case 'blockquote':
+          return clean(contenido).split('\n').map(line => line ? `> ${line}` : '').join('\n') + '\n';
+        case 'br':
+          return '\n';
+        case 'p':
+          // Si el contenido no está vacío, poner salto de línea al final
+          return clean(contenido) ? clean(contenido) + '\n' : '';
+        default:
+          return contenido;
+      }
+    }
+    return resultado;
+  }
+
+  // Procesar cada hijo de tempDiv como bloque independiente para respetar saltos de línea
+  let resultado = Array.from(tempDiv.childNodes).map(nodo => procesarNodo(nodo)).join('');
+  resultado = resultado.replace(/\n{3,}/g, '\n\n').trim();
+  return resultado;
+}

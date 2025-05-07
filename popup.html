@@ -6,6 +6,7 @@
   <title>Extensión WhatsApp</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="trix.css">
 </head>
 <body class="light-theme">
   <!-- Sección de login mejorada -->
@@ -221,7 +222,8 @@
           </div>
           
           <div class="textarea-container">
-            <textarea id="mensaje-texto" placeholder="Escribe tu mensaje aquí..."></textarea>
+            <trix-editor id="trix-editor" input="trix-input"></trix-editor>
+            <input id="trix-input" type="hidden" name="content">
             <div class="textarea-tools">
               <button id="emoji-btn" class="tool-btn" title="Insertar emoji">
                 <i class="fas fa-smile"></i>
@@ -375,6 +377,9 @@
   <script src="groupExtractor.js"></script>
   <script src="numberManager.js"></script>
   <script src="excelLoader.js"></script>
+  <script src="quill.min.js"></script>
+  <script src="quill-init.js"></script>
+  <script src="trix.js"></script>
   
 </body>
 </html>
